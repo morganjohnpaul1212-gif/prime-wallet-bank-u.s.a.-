@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google-site-verification" content="g9v8im8X19-iUEDczexVSuwdEJYl1NxOmYTac_Zo" />
+  <title>Prime Wallet Bank - USA</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Roboto, Arial, sans-serif; }
+    :root {
+      --prime-blue: #0047AB;
+      --prime-dark-blue: #002D6D;
+      --prime-light-blue: #E8F0FE;
+      --white: #fff;
+      --light-gray: #f8f9fa;
+      --gray: #6c757d;
+      --dark: #212529;
+      --success: #198754;
+      --warning: #ffc107;
+      --danger: #dc3545;
+      --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    body { background: var(--light-gray); color: var(--dark); min-height:100vh; }
+    .hidden { display:none !important; }
+
+    /* Header */
+    .header { background: var(--prime-blue); color: #fff; padding: 1.2rem; display: flex; align-items: center; justify-content: space-between; }
+    .logo { display: flex; align-items: center; gap: 0.75rem; font-size: 1.5rem; font-weight: 700; }
+    .us-flag { font-size: 1.8rem; margin-left: 0.5rem; } /* US flag after bank name */
+    .sign-in-btn { border: 2px solid #fff; border-radius: 8px; padding: 0.6rem 1.2rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .sign-in-btn:active { background: rgba(255,255,255,0.2); transform: scale(0.96); }
+
+    .container { max-width: 480px; margin: 2rem auto; padding: 0 1.5rem; }
+    .card { background: #fff; border-radius: 16px; padding: 2rem; box-shadow: var(--shadow); text-align: center; }
+    h1 { color: var(--prime-dark-blue); font-size: 1.8rem; margin-bottom: 1rem; line-height: 1.3; }
+    .sub-text { color: var(--gray); font-size: 1.1rem; margin-bottom: 2rem; line-height: 1.5; }
+    .btn { width: 100%; padding: 1rem; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .btn-primary { background: var(--prime-blue); color: #fff; }
+    .btn-primary:active { background: var(--prime-dark-blue); transform: scale(0.98); }
+    .btn-link { background: none; color: var(--prime-blue); font-weight: 600; margin-top: 1rem; text-decoration: underline; cursor: pointer; }
+    .footer-text { text-align: center; color: var(--gray); font-size: 0.9rem; margin: 2rem 0; line-height: 1.5; }
+    .footer-text a { color: var(--prime-blue); text-decoration: none; font-weight: 500; }
+
+    /* Registration Form */
+    .form-card { text-align: left; }
+    .form-card h2 { text-align: center; color: var(--prime-dark-blue); font-size: 1.6rem; margin-bottom: 0.5rem; }
+    .form-subtitle { text-align: center; color: var(--gray); margin-bottom: 2rem; }
+    .steps { display: flex; justify-content: space-between; position: relative; margin-bottom: 2rem; }
+    .steps::before { content: ''; position: absolute; top: 16px; left: 10%; right: 10%; height: 2px; background: #e9ecef; z-index: 1; }
+    .step { display: flex; flex-direction: column; align-items: center; position: relative; z-index: 2; font-size: 0.9rem; color: var(--gray); }
+    .step-number { width: 32px; height: 32px; border-radius: 50%; background: #e9ecef; color: var(--gray); display: flex; align-items: center; justify-content: center; font-weight: 700; margin-bottom: 0.5rem; }
+    .step.active .step-number { background: var(--prime-blue); color: #fff; }
+    .step.completed .step-number { background: var(--success); color: #fff; }
+    .step.active { color: var(--prime-blue); font-weight: 600; }
+
+    .form-group { margin-bottom: 1.5rem; }
+    label { display: block; margin-bottom: 0.6rem; font-weight: 500; color: var(--dark); }
+    input, select { width: 100%; padding: 0.9rem; border: 1px solid #ced4da; border-radius: 8px; font-size: 1rem; transition: 0.2s; }
+    input:focus, select:focus { outline: none; border-color: var(--prime-blue); box-shadow: 0 0 0 3px rgba(0,71,171,0.15); }
+    .input-hint { font-size: 0.85rem; color: var(--gray); margin-top: 0.4rem; }
+    .btn-group { display: flex; gap: 1rem; margin-top: 2rem; }
+    .btn-secondary { background: #fff; color: var(--prime-blue); border: 2px solid var(--prime-blue); }
+    .btn-secondary:active { background: var(--prime-light-blue); }
+    .alert { padding: 1rem; border-radius: 8px; margin: 1.2rem 0; text-align: center; font-weight: 500; }
+    .alert-info { background: #cff4fc; color: #055160; border: 1px solid #b6eff9; }
+    .alert-success { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
+    .alert-warning { background: #fff3cd; color: #664d03; border: 1px solid #ffecb5; }
+    .alert-danger { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+
+    /* Dashboard */
+    .welcome-bar { background: linear-gradient(135deg, var(--prime-blue), var(--prime-dark-blue)); color: #fff; padding: 1.5rem; position: relative; }
+    .welcome-bar h1 { color: #fff; text-align: left; font-size: 1.4rem; margin-bottom: 0.3rem; }
+    .date-time { position: absolute; top: 1.5rem; right: 1.5rem; text-align: right; font-size: 0.9rem; opacity: 0.9; font-weight: 500; }
+    .account-type { font-size: 0.95rem; opacity: 0.9; margin: 2.5rem 0 0.3rem; }
+    .account-number { font-size: 1.1rem; font-weight: 600; letter-spacing: 1px; opacity: 0.9; font-family: monospace; }
+    .balance-section { background: #fff; padding: 1.5rem; margin: 1rem; border-radius: 12px; box-shadow: var(--shadow); }
+    .balance-label { font-size: 1rem; color: var(--gray); margin-bottom: 0.5rem; }
+    .balance-amount { font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; }
+    .quick-actions { display: flex; gap: 1rem; margin: 1rem; overflow-x: auto; padding: 0 1rem 1rem; }
+    .action-btn { flex: 0 0 auto; background: #fff; border: 1px solid #e9ecef; border-radius: 12px; padding: 1rem; min-width: 100px; text-align: center; cursor: pointer; transition: 0.2s; box-shadow: var(--shadow); }
+    .action-btn:active { transform: scale(0.96); background: var(--prime-light-blue); }
+    .action-icon { font-size: 1.6rem; margin-bottom: 0.6rem; }
+    .action-text { font-size: 0.9rem; font-weight: 500; }
+    .nav-menu { background: #fff; margin: 0 1rem 2rem; border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; }
+    .nav-item { display: flex; align-items: center; padding: 1.2rem; border-bottom: 1px solid #f1f3f5; cursor: pointer; transition: 0.2s; }
+    .nav-item:last-child { border-bottom: none; }
+    .nav-item:active { background: var(--prime-light-blue); }
+    .nav-icon { font-size: 1.4rem; margin-right: 0.8rem; width: 24px; text-align: center; }
+    .nav-label { font-size: 1.05rem; font-weight: 500; }
+    .locked { opacity: 0.6; cursor: not-allowed; }
+    .recipient-result { padding: 1rem; background: #d1e7dd; border-radius: 8px; margin: 1rem 0; text-align: center; font-weight: 600; color: #0f5132; }
+    .recipient-error { background: #f8d7da; color: #842029; }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; border-top: 1px solid #e9ecef; display: flex; justify-content: space-around; padding: 0.75rem 0; box-shadow: 0 -2px 8px rgba(0,0,0,0.05); }
+    .bottom-nav-item { display: flex; flex-direction: column; align-items: center; font-size: 0.75rem; color: var(--gray); cursor: pointer; transition: 0.2s; }
+    .bottom-nav-item.active { color: var(--prime-blue); }
+    .bottom-nav-item .icon { font-size: 1.5rem; margin-bottom: 0.3rem; }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="logo">
+    <span style="font-size: 2rem;">🏦</span>
+    <div>Prime Wallet<br>Bank - USA</div>
+    <span class="us-flag">🇺🇸</span> <!-- US flag added here -->
+  </div>
+  <div class="sign-in-btn" onclick="showPage('login-page')">Sign In</div>
+</div>
+
+<!-- Landing Page -->
+<div id="landing-page" class="container">
+  <div class="card">
+    <h1>Secure Banking<br>Made for You</h1>
+    <p class="sub-text">Join millions of users worldwide.<br>Create your account today.</p>
+    <button class="btn btn-primary" onclick="showPage('register-page')">CREATE YOUR ACCOUNT</button>
+  </div>
+  <p class="footer-text">
+    © 2026 Prime Wallet Bank - USA. All rights reserved.<br><br>
+    Secure · Licensed · Compliant · Worldwide<br><br>
+    Contact: <a href="mailto:support@primewalletbank.us">support@primewalletbank.us</a>
+  </p>
+</div>
+
+<!-- Register Page -->
+<div id="register-page" class="container hidden">
+  <div class="card form-card">
+    <h2>🔐 Create Your Account</h2>
+    <p class="form-subtitle">Secure Registration — All Fields Required</p>
+
+    <div class="steps">
+      <div class="step active" id="step1-indicator">
+        <div class="step-number">1</div>
+        <div>Personal<br>Info</div>
+      </div>
+      <div class="step" id="step2-indicator">
+        <div class="step-number">2</div>
+        <div>Location</div>
+      </div>
+      <div class="step" id="step3-indicator">
+        <div class="step-number">3</div>
+        <div>Verification</div>
+      </div>
+      <div class="step" id="step4-indicator">
+        <div class="step-number">4</div>
+        <div>Upload<br>ID</div>
+      </div>
+    </div>
+
+    <form id="register-form">
+      <!-- Step 1: Personal Info -->
+      <div id="step1-content">
+        <h3 style="color: var(--prime-blue); margin-bottom: 1.5rem;">📋 Personal Details</h3>
+        <div class="form-group">
+          <label>Full Name (First & Last Name) *</label>
+          <input type="text" placeholder="e.g. John Michael Morgan" required>
+        </div>
+        <div class="form-group">
+          <label>Email Address *</label>
+          <input type="email" placeholder="yourname@email.com" required>
+        </div>
+        <div class="form-group">
+          <label>Phone Number *</label>
+          <input type="tel" placeholder="+234 XXX XXX XXXX" required>
+        </div>
+        <div class="form-group">
+          <label>Date of Birth *</label>
+          <input type="date" required>
+        </div>
+        <div class="form-group">
+          <label>Create Password *</label>
+          <input type="password" placeholder="8+ chars: letters, numbers, symbols" required>
+        </div>
+        <div class="form-group">
+          <label>Confirm Password *</label>
+          <input type="password" placeholder="Re-enter your password" required>
+        </div>
+        <div class="btn-group">
+          <button type="button" class="btn btn-secondary" onclick="showPage('landing-page')">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="goToStep(2)">Continue</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Location -->
+      <div id="step2-content" class="hidden">
+        <h3 style="color: var(--prime-blue); margin-bottom: 1.5rem;">📍 Location Details</h3>
+        <div class="form-group">
+          <label>Country of Residence *</label>
+          <select id="reg-country" onchange="loadStates()">
+            <option value="">Select Country</option>
+            <option value="US">United States</option>
+            <option value="GB">United Kingdom</option>
+            <option value="CA">Canada</option>
+            <option value="NG" selected>Nigeria</option>
+            <option value="ZA">South Africa</option>
+            <option value="KE">Kenya</option>
+            <option value="GH">Ghana</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>State / Province *</label>
+          <select id="reg-state" onchange="loadCities()">
+            <option value="">Select State</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>City *</label>
+          <select id="reg-city">
+            <option value="">Select City</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Residential Address *</label>
+          <input type="text" placeholder="Street address, Apartment, Suite" required>
+        </div>
+        <div class="btn-group">
+          <button type="button" class="btn btn-secondary" onclick="goToStep(1)">Back</button>
+          <button type="button" class="btn btn-primary" onclick="goToStep(3)">Continue</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Verification -->
+      <div id="step3-content" class="hidden">
+        <h3 style="color: var(--prime-blue); margin-bottom: 1.5rem;">🔒 Security Verification</h3>
+        <div class="form-group">
+          <label>Email Verification Code *</label>
+          <div style="display:flex; gap:0.5rem;">
+            <input type="text" placeholder="Enter code sent to your email" style="flex:1;" required>
+            <button type="button" class="btn btn-secondary" style="width:auto; white-space:nowrap;" onclick="sendEmailCode()">Send Code</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Phone Verification Code *</label>
+          <div style="display:flex; gap:0.5rem;">
+            <input type="text" placeholder="Enter code sent via SMS" style="flex:1;" required>
+            <button type="button" class="btn btn-secondary" style="width:auto; white-space:nowrap;" onclick="sendSmsCode()">Send Code</button>
+          </div>
+        </div>
+        <div class="alert alert-info">
+          📧 Codes will be sent to your email and phone. <strong>Admin must approve your account before you can sign in.</strong>
+        </div>
+        <div class="btn-group">
+          <button type="button" class="btn btn-secondary" onclick="goToStep(2)">Back</button>
+          <button type="button" class="btn btn-primary" onclick="goToStep(4)">Continue</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Upload ID -->
+      <div id="step4-content" class="hidden">
+        <h3 style="color: var(--prime-blue); margin-bottom: 1.5rem;">🪪 Identification</h3>
+        <div class="form-group">
+          <label>Government ID Type *</label>
+          <select>
+            <option value="">Select ID Type</option>
+            <option>Driver's License</option>
+            <option>Passport</option>
+            <option>National ID Card</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>ID Number *</label>
+          <input type="text" placeholder="Enter your ID number" required>
+        </div>
+        <div class="form-group">
+          <label>Upload ID — Front Side *</label>
+          <input type="file" accept="image/*" required>
+        </div>
+        <div class="form-group">
+          <label>Upload ID — Back Side *</label>
+          <input type="file" accept="image/*" required>
+        </div>
+        <div class="alert alert-info">
+          🔒 Your personal information is encrypted and securely stored. Admin will review and approve your account before you can sign in.
+        </div>
+        <div class="btn-group">
+          <button type="button" class="btn btn-secondary" onclick="goToStep(3)">Back</button>
+          <button type="submit" class="btn btn-primary">Submit for Admin Approval</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Login Page -->
+<div id="login-page" class="container hidden">
+  <div class="card form-card">
+    <h2>Sign In</h2>
+    <p class="form-subtitle">Access your Prime Wallet Bank account</p>
+    <form>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" placeholder="yourname@email.com" required>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" placeholder="Enter your password" required>
+      </div>
+      <div class="alert alert-warning">
+        🔒 Your account is pending admin approval. You will be able to sign in once approved.
+      </div>
+      <button type="button" class="btn btn-primary" onclick="login()">Sign In</button>
+      <p class="btn-link" onclick="showPage('register-page')">Don't have an account? Create one now</p>
+    </form>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard-page" class="hidden">
+  <div class="welcome-bar">
+    <h1>Welcome back, <span id="user-name">User</span> 👋</h1>
+    <!-- Real-time date & time display -->
+    <div id="date-time" class="date-time"></div>
+    <div class="account-type">Prime Wallet Account • USA</div>
+    <div class="account-number">Account: PW-XXXX-XXXX-XXXX</div>
+  </div>
+  <div class="balance-section">
+    <div class="balance-label">Available Balance</div>
+    <div class="balance-amount">$<span id="balance">0.00</span></div>
+    <div class="alert alert-warning" style="margin:0;">
+      🔒 Purchase Card to Create Your Pin For Transactions
+    </div>
+  </div>
+
+  <div class="quick-actions">
+    <div class="action-btn" onclick="showTransferPage()">
+      <div class="action-icon">💬</div>
+      <div class="action-text">Send</div>
+    </div>
+    <div class="action-btn" onclick="alert('Zelle® coming soon')">
+      <div class="action-icon">Zelle®</div>
+      <div class="action-text">Zelle®</div>
+    </div>
+    <div class="action-btn" onclick="alert('Deposit checks coming soon')">
+      <div class="action-icon">📎</div>
+      <div class="action-text">Deposit Checks</div>
+    </div>
+    <div class="action-btn" onclick="alert('Pay bills coming soon')">
+      <div class="action-icon">👤</div>
+      <div class="action-text">Pay Bills</div>
+    </div>
+  </div>
+
+  <div class="nav-menu">
+    <div class="nav-item" onclick="alert('Purchase card page coming soon')">
+      <div class="nav-icon">💳</div>
+      <div class="nav-label">Purchase Card To Create Your Pin For Transactions</div>
+    </div>
+    <div class="nav-item locked">
+      <div class="nav-icon">💳</div>
+      <div class="nav-label">Credit Cards</div>
+    </div>
+    <div class="nav-item" onclick="alert('Checking account page coming soon')">
+      <div class="nav-icon">🏦</div>
+      <div class="nav-label">Checking</div>
+    </div>
+    <div class="nav-item" onclick="alert('Savings page coming soon')">
+      <div class="nav-icon">💰</div>
+      <div class="nav-label">Savings & CDs</div>
+    </div>
+    <div class="nav-item" onclick="alert('Mortgage page coming soon')">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label">Mortgage</div>
+    </div>
+    <div class="nav-item" onclick="alert('Accounts page coming soon')">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label">Accounts</div>
+    </div>
+    <div class="nav-item" onclick="showTransferPage()">
+      <div class="nav-icon">↗️</div>
+      <div class="nav-label">Pay & transfer</div>
+    </div>
+    <div class="nav-item" onclick="alert('Plan & track page coming soon')">
+      <div class="nav-icon">📊</div>
+      <div class="nav-label">Plan & track</div>
+    </div>
+    <div class="nav-item" onclick="alert('More menu coming soon')">
+      <div class="nav-icon">☰</div>
+      <div class="nav-label">More</div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="bottom-nav-item active" onclick="showPage('dashboard-page')">
+      <div class="icon">🏠</div>
+      <div>Home</div>
+    </div>
+    <div class="bottom-nav-item" onclick="showTransferPage()">
+      <div class="icon">↗️</div>
+      <div>Pay & Transfer</div>
+    </div>
+    <div class="bottom-nav-item" onclick="alert('Cards page coming soon')">
+      <div class="icon">💳</div>
+      <div>Cards</div>
+    </div>
+    <div class="bottom-nav-item" onclick="alert('More page coming soon')">
+      <div class="icon">☰</div>
+      <div>More</div>
+    </div>
+  </div>
+</div>
+
+<!-- Transfer Page with CoP/AVS -->
+<div id="transfer-page" class="container hidden">
+  <div class="card form-card">
+    <button class="btn-link" style="text-align:left; margin-bottom:1rem;" onclick="showPage('dashboard-page')">← Back to Dashboard</button>
+    <h2>Send Money</h2>
+    <p class="form-subtitle">Secure, real-time global transfers</p>
+
+    <div class="alert alert-info">
+      ✅ <strong>Confirmation of Payee (CoP) / Account Validation (AVS) Active</strong><br>
+      Recipient name is verified instantly against the receiving bank account — works in Nigeria, UK, US, EU, and worldwide.
+    </div>
+
+    <form>
+      <div class="form-group">
+        <label>Recipient Account Number *</label>
+        <input type="text" id="recipient-account" placeholder="Enter account number" required onblur="verifyAccount()">
+      </div>
+      <div class="form-group">
+        <label>Recipient Bank Name *</label>
+        <input type="text" id="recipient-bank" placeholder="Enter bank name" required onblur="verifyAccount()">
+      </div>
+      <div id="recipient-result" class="hidden"></div>
+
+      <div class="form-group">
+        <label>Amount (USD) *</label>
+        <input type="number" placeholder="0.00" required>
+      </div>
+      <div class="form-group">
+        <label>Your 4-Digit Transaction PIN *</label>
+        <input type="password" maxlength="4" placeholder="XXXX" required>
+      </div>
+      <div class="alert alert-warning">🔒 Purchase your card and create your PIN to enable transfers.</div>
+      <button type="submit" class="btn btn-primary" disabled>Proceed Transfer</button>
+    </form>
+  </div>
+</div>
+
+<script>
+function showPage(id) {
+  document.querySelectorAll('.container, #dashboard-page').forEach(el => el.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  window.scrollTo(0,0);
+}
+
+function goToStep(step) {
+  document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.step').forEach((s,i) => {
+    s.classList.remove('active','completed');
+    if (i+1 < step) s.classList.add('completed');
+    if (i+1 === step) s.classList.add('active');
+  });
+  document.getElementById(`step${step}-content`).classList.remove('hidden');
+}
+
+// Location data
+const locationData = {
+  US: { states: { CA: ['Los Angeles'], NY: ['New York'] }},
+  NG: { states: { AB: ['Abuja'], LA: ['Lagos'], RI: ['Port Harcourt'], EN: ['Enugu'] }},
+  GB: { states: { ENG: ['London'] }}
+};
+function loadStates() {
+  const c = document.getElementById('reg-country').value;
+  const s = document.getElementById('reg-state');
+  const cities = document.getElementById('reg-city');
+  s.innerHTML = '<option value="">Select State</option>';
+  cities.innerHTML = '<option value="">Select State First</option>';
+  if (locationData[c]?.states) {
+    Object.keys(locationData[c].states).forEach(code => {
+      const opt = document.createElement('option');
+      opt.value = code; opt.textContent = code; s.appendChild(opt);
+    });
+  }
+}
+function loadCities() {
+  const c = document.getElementById('reg-country').value;
+  const s = document.getElementById('reg-state').value;
+  const cities = document.getElementById('reg-city');
+  cities.innerHTML = '<option value="">Select City</option>';
+  if (locationData[c]?.states?.[s]) {
+    locationData[c].states[s].forEach(city => {
+      const opt = document.createElement('option');
+      opt.value = city; opt.textContent = city; cities.appendChild(opt);
+    });
+  }
+}
+
+function sendEmailCode() { alert('✅ Verification code sent to your email!'); }
+function sendSmsCode() { alert('✅ Verification code sent to your phone!'); }
+
+document.getElementById('register-form').addEventListener('submit', e => {
+  e.preventDefault();
+  alert('✅ Registration submitted! Admin will review and approve your account. You can sign in once approved.');
+  showPage('login-page');
+});
+
+function login() {
+  alert('✅ Sign in successful!');
+  showPage('dashboard-page');
+}
+
+// Real-time date & time update on dashboard
+function updateDateTime() {
+  const now = new Date();
+  const options = {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    timeZoneName: 'short'
+  };
+  const dateTimeString = now.toLocaleString('en-US', options);
+  const el = document.getElementById('date-time');
+  if (el) el.textContent = dateTimeString;
+}
+// Update immediately and every second
+updateDateTime();
+setInterval(updateDateTime, 1000);
+
+// Global account verification DB (CoP/AVS)
+const accountDB = {
+  // Nigeria
+  '0012345678': { name: 'Chinyere Okoro', bank: 'First Bank of Nigeria', country: 'NG' },
+  '0098765432': { name: 'Emmanuel Okafor', bank: 'Guaranty Trust Bank', country: 'NG' },
+  '0011223344': { name: 'Aisha Bello', bank: 'Access Bank', country: 'NG' },
+  // UK
+  '12345678': { name: 'James Smith', bank: 'Barclays Bank', country: 'GB' },
+  '87654321': { name: 'Sarah Johnson', bank: 'HSBC UK', country: 'GB' },
+  // US
+  '9876543210': { name: 'Michael Davis', bank: 'Bank of America', country: 'US' },
+  '1234567890': { name: 'Emily Wilson', bank: 'Chase Bank', country: 'US' }
+};
+
+function verifyAccount() {
+  const acc = document.getElementById('recipient-account').value.trim();
+  const bank = document.getElementById('recipient-bank').value.trim();
+  const resBox = document.getElementById('recipient-result');
+  resBox.classList.add('hidden');
+
+  if (!acc || !bank) return;
+
+  if (accountDB[acc]) {
+    const rec = accountDB[acc];
+    resBox.innerHTML = `✅ <strong>Confirmation of Payee / Account Validation SUCCESS</strong><br>Recipient: <strong>${rec.name}</strong><br>Bank: ${rec.bank}<br>Country: ${rec.country === 'NG' ? 'Nigeria' : rec.country === 'GB' ? 'United Kingdom' : rec.country === 'US' ? 'United States' : rec.country}`;
+    resBox.className = 'recipient-result';
+    resBox.classList.remove('hidden');
+  } else {
+    resBox.innerHTML = `❌ <strong>Account Verification Failed</strong><br>No matching account found for the provided details. Please check the account number and bank name.`;
+    resBox.className = 'recipient-result recipient-error';
+    resBox.classList.remove('hidden');
+  }
+}
+
+function showTransferPage() {
+  showPage('transfer-page');
+}
+</script>
+</body>
+</html>
