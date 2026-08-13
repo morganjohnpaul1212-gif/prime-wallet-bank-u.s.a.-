@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Portal — Prime Wallet Bank</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Roboto, Arial, sans-serif; }
+    :root {
+      --bg-dark: #0f172a;
+      --bg-panel: #1e293b;
+      --bg-card: #334155;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --text-light: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #475569;
+      --shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    body { background: var(--bg-dark); color: var(--text-light); min-height:100vh; font-size:14px; }
+    .hidden { display:none !important; }
+
+    /* Top Bar */
+    .top-bar { background: var(--bg-panel); padding:1rem; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
+    .logo { font-size:1.3rem; font-weight:700; display:flex; align-items:center; gap:0.5rem; }
+    .admin-info { display:flex; align-items:center; gap:0.75rem; color:var(--text-muted); }
+    .search-box { background: var(--bg-card); border:none; color:var(--text-light); padding:0.5rem 0.75rem; border-radius:6px; width:250px; }
+    .search-box::placeholder { color: var(--text-muted); }
+    .sidebar-toggle { background:none; border:none; color:var(--text-light); font-size:1.5rem; cursor:pointer; }
+
+    /* Sidebar */
+    .sidebar { background: var(--bg-panel); width:260px; position:fixed; top:64px; left:0; bottom:0; border-right:1px solid var(--border); padding:1rem 0; overflow-y:auto; transition:0.3s; z-index:90; }
+    .sidebar.collapsed { left:-260px; }
+    .sidebar-item { display:flex; align-items:center; gap:0.75rem; padding:0.9rem 1.5rem; cursor:pointer; color:var(--text-muted); transition:0.2s; }
+    .sidebar-item:hover, .sidebar-item.active { background: var(--bg-card); color:var(--text-light); border-left:4px solid var(--primary); }
+    .sidebar-item .icon { font-size:1.2rem; width:20px; text-align:center; }
+
+    /* Main Content */
+    .main-content { margin-left:260px; padding:1.5rem; transition:0.3s; }
+    .main-content.expanded { margin-left:0; }
+    @media (max-width:768px) {
+      .sidebar { left:-260px; }
+      .main-content { margin-left:0; }
+      .top-bar { padding:0.75rem; }
+      .search-box { width:180px; }
+    }
+
+    /* Cards & Panels */
+    .row { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem; margin-bottom:1.5rem; }
+    .card { background: var(--bg-panel); border-radius:10px; padding:1.25rem; box-shadow:var(--shadow); border:1px solid var(--border); }
+    .card-header { font-size:1.1rem; font-weight:600; margin-bottom:1rem; display:flex; align-items:center; justify-content:space-between; }
+    .badge { font-size:0.75rem; padding:0.25rem 0.5rem; border-radius:999px; background:var(--primary); color:#fff; font-weight:600; }
+    .badge.success { background:var(--success); }
+    .badge.warning { background:var(--warning); }
+    .badge.danger { background:var(--danger); }
+
+    /* Tables */
+    .table-responsive { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; margin-top:0.5rem; }
+    th, td { padding:0.75rem; text-align:left; border-bottom:1px solid var(--border); }
+    th { color:var(--text-muted); font-weight:600; font-size:0.9rem; }
+    tr:hover { background: var(--bg-card); }
+    .btn { padding:0.5rem 0.9rem; border:none; border-radius:6px; font-weight:600; cursor:pointer; transition:0.2s; font-size:0.85rem; }
+    .btn-sm { padding:0.4rem 0.75rem; font-size:0.8rem; }
+    .btn-primary { background:var(--primary); color:#fff; }
+    .btn-primary:hover { background:var(--primary-hover); }
+    .btn-success { background:var(--success); color:#fff; }
+    .btn-danger { background:var(--danger); color:#fff; }
+    .btn-warning { background:var(--warning); color:#fff; }
+
+    /* Tabs */
+    .tabs { display:flex; border-bottom:1px solid var(--border); margin:1rem 0; }
+    .tab { padding:0.75rem 1.25rem; cursor:pointer; color:var(--text-muted); border-bottom:2px solid transparent; transition:0.2s; }
+    .tab.active { color:var(--primary); border-bottom-color:var(--primary); }
+    .tab-content { display:none; padding:1rem 0; }
+    .tab-content.active { display:block; }
+
+    /* Detail View */
+    .detail-header { background: var(--bg-panel); padding:1.25rem; border-radius:10px; margin-bottom:1.5rem; border:1px solid var(--border); }
+    .detail-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:1rem 0; }
+    .detail-group { margin-bottom:1rem; }
+    .detail-label { color:var(--text-muted); font-size:0.85rem; margin-bottom:0.25rem; }
+    .detail-value { font-size:1rem; font-weight:500; }
+    .document-item { background: var(--bg-card); border-radius:8px; padding:1rem; margin-bottom:1rem; border-left:4px solid var(--primary); }
+    .document-preview { max-width:100%; max-height:200px; margin:0.75rem 0; border-radius:4px; background:#fff; }
+    .form-group { margin-bottom:1rem; }
+    label { display:block; margin-bottom:0.5rem; font-weight:500; }
+    input, textarea, select { width:100%; padding:0.75rem; background:var(--bg-card); border:1px solid var(--border); border-radius:6px; color:var(--text-light); font-size:0.95rem; }
+    textarea { resize:vertical; min-height:100px; }
+    .close-btn { background:none; border:none; color:var(--text-light); font-size:1.5rem; cursor:pointer; float:right; }
+
+    /* Card Request Detail */
+    .card-request-item { background: var(--bg-card); border-radius:8px; padding:1.25rem; margin-bottom:1.5rem; border-left:4px solid var(--warning); }
+    .card-preview-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:1.5rem; margin:1rem 0; }
+    .card-preview-box { text-align:center; background:#fff; padding:1rem; border-radius:8px; }
+    .card-preview-box img { max-width:100%; height:auto; max-height:160px; margin-bottom:0.5rem; border-radius:4px; }
+    .pin-display { font-family:monospace; font-size:1.2rem; font-weight:700; letter-spacing:2px; color:#ef4444; background:#fff; padding:0.75rem; border-radius:6px; display:inline-block; margin:0.5rem 0; }
+
+    /* Logs */
+    .log-item { padding:0.75rem; border-bottom:1px solid var(--border); font-family:monospace; font-size:0.85rem; }
+    .log-time { color:var(--text-muted); margin-right:1rem; }
+    .log-success { color:var(--success); }
+    .log-error { color:var(--danger); }
+    .log-warning { color:var(--warning); }
+
+    /* Modals */
+    .modal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.85); display:flex; align-items:center; justify-content:center; z-index:200; opacity:0; visibility:hidden; transition:0.2s; }
+    .modal.active { opacity:1; visibility:visible; }
+    .modal-content { background:var(--bg-panel); border-radius:12px; width:95%; max-width:600px; max-height:90vh; overflow-y:auto; box-shadow:var(--shadow); border:1px solid var(--border); }
+    .modal-header { padding:1.25rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+    .modal-body { padding:1.25rem; }
+    .modal-footer { padding:1rem; border-top:1px solid var(--border); text-align:right; }
+
+    /* Stats Chart */
+    .chart-placeholder { height:200px; display:flex; align-items:end; gap:4px; padding:1rem 0; }
+    .chart-bar { flex:1; background:var(--primary); border-radius:2px; transition:0.2s; }
+    .chart-bar:hover { background:var(--primary-hover); }
+  </style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="top-bar">
+  <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+  <div class="logo">🔷 Admin Portal</div>
+  <input type="text" class="search-box" placeholder="Search users, logs...">
+  <div class="admin-info">
+    <span>👤 TWIN_ADMIN_01</span>
+    <span>🔔</span>
+    <span>⚙️</span>
+  </div>
+</div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-item active" onclick="showSection('dashboard')">
+    <span class="icon">📊</span>
+    <span>Dashboard</span>
+  </div>
+  <div class="sidebar-item" onclick="showSection('registrations')">
+    <span class="icon">📝</span>
+    <span>Registrations</span>
+  </div>
+  <div class="sidebar-item" onclick="showSection('card-requests')">
+    <span class="icon">💳</span>
+    <span>Card Requests</span>
+  </div>
+  <div class="sidebar-item" onclick="showSection('user-management')">
+    <span class="icon">👥</span>
+    <span>User Management</span>
+  </div>
+  <div class="sidebar-item" onclick="showSection('funding')">
+    <span class="icon">💰</span>
+    <span>Funding Control</span>
+  </div>
+  <div class="sidebar-item" onclick="showSection('logs')">
+    <span class="icon">📋</span>
+    <span>Logs & Activity</span>
+  </div>
+  <div class="sidebar-item" onclick="showSection('compliance')">
+    <span class="icon">🔒</span>
+    <span>Compliance</span>
+  </div>
+  <div class="sidebar-item" onclick="showSection('settings')">
+    <span class="icon">⚙️</span>
+    <span>Settings</span>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-content" id="main-content">
+  <!-- Dashboard -->
+  <section id="dashboard" class="content-section">
+    <div class="row">
+      <div class="card">
+        <div class="card-header">Total Users</div>
+        <div style="font-size:2rem; font-weight:700; margin:1rem 0;">412</div>
+        <div class="badge success">+24 today</div>
+      </div>
+      <div class="card">
+        <div class="card-header">Pending Registrations</div>
+        <div style="font-size:2rem; font-weight:700; margin:1rem 0;">18</div>
+        <div class="badge warning">Action needed</div>
+      </div>
+      <div class="card">
+        <div class="card-header">Pending Card Requests</div>
+        <div style="font-size:2rem; font-weight:700; margin:1rem 0;">7</div>
+        <div class="badge warning">Action needed</div>
+      </div>
+      <div class="card">
+        <div class="card-header">Total Funds Disbursed</div>
+        <div style="font-size:2rem; font-weight:700; margin:1rem 0;">$1,240,500</div>
+        <div class="badge success">Active</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="card" style="grid-column: 1 / -1;">
+        <div class="card-header">Registration Activity — Live</div>
+        <div class="chart-placeholder">
+          <div class="chart-bar" style="height:20%"></div>
+          <div class="chart-bar" style="height:35%"></div>
+          <div class="chart-bar" style="height:45%"></div>
+          <div class="chart-bar" style="height:60%"></div>
+          <div class="chart-bar" style="height:75%"></div>
+          <div class="chart-bar" style="height:50%"></div>
+          <div class="chart-bar" style="height:65%"></div>
+          <div class="chart-bar" style="height:80%"></div>
+          <div class="chart-bar" style="height:55%"></div>
+          <div class="chart-bar" style="height:70%"></div>
+          <div class="chart-bar" style="height:85%"></div>
+          <div class="chart-bar" style="height:60%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="card">
+        <div class="card-header">Recent User Logs</div>
+        <div class="log-item"><span class="log-time">14:02:12</span> <span class="log-success">USER_58201 ✅ ACCOUNT_APPROVED</span></div>
+        <div class="log-item"><span class="log-time">14:01:05</span> <span class="log-success">USER_58201 ✅ LOGIN_SUCCESS</span></div>
+        <div class="log-item"><span class="log-time">14:00:32</span> <span class="log-warning">USER_49144 ⏳ CARD_REQUESTED</span></div>
+        <div class="log-item"><span class="log-time">13:58:47</span> <span class="log-success">USER_39144 ✅ ACCOUNT_CREATED</span></div>
+        <div class="log-item"><span class="log-time">13:55:21</span> <span class="log-error">USER_28101 ❌ LOGIN_FAILED</span></div>
+      </div>
+      <div class="card">
+        <div class="card-header">Pending Documents Queue</div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr><th>User ID</th><th>Type</th><th>Date</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>USER_58201</td><td>Passport</td><td>2024-11-15</td><td><span class="badge warning">Pending</span></td>
+                <td><button class="btn btn-sm btn-primary" onclick="viewUserDetail(58201)">Review</button></td>
+              </tr>
+              <tr>
+                <td>USER_49144</td><td>Card Purchase</td><td>2024-11-15</td><td><span class="badge warning">Pending</span></td>
+                <td><button class="btn btn-sm btn-primary" onclick="viewCardRequest(49144)">Review</button></td>
+              </tr>
+              <tr>
+                <td>USER_39144</td><td>National ID</td><td>2024-11-14</td><td><span class="badge warning">Pending</span></td>
+                <td><button class="btn btn-sm btn-primary" onclick="viewUserDetail(39144)">Review</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Registrations -->
+  <section id="registrations" class="content-section hidden">
+    <div class="card">
+      <div class="card-header">Pending Registrations <span class="badge warning">18</span></div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr><th>User ID</th><th>Full Name</th><th>Email</th><th>Country</th><th>Date</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>USER_58201</td><td>John Michael Morgan</td><td>john@example.com</td><td>NG</td><td>2024-11-15</td><td><span class="badge warning">Pending</span></td>
+              <td>
+                <button class="btn btn-sm btn-primary" onclick="viewUserDetail(58201)">View</button>
+                <button class="btn btn-sm btn-success" onclick="approveRegistration(58201)">Approve</button>
+                <button class="btn btn-sm btn-danger" onclick="rejectRegistration(58201)">Reject</button>
+              </td>
+            </tr>
+            <tr>
+              <td>USER_49144</td><td>Chinyere Okoro</td><td>chinyere@example.com</td><td>NG</td><td>2024-11-15</td><td><span class="badge warning">Pending</span></td>
+              <td>
+                <button class="btn btn-sm btn-primary" onclick="viewUserDetail(49144)">View</button>
+                <button class="btn btn-sm btn-success" onclick="approveRegistration(49144)">Approve</button>
+                <button class="btn btn-sm btn-danger" onclick="rejectRegistration(49144)">Reject</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Card Requests -->
+  <section id="card-requests" class="content-section hidden">
+    <div class="card">
+      <div class="card-header">Pending Card Purchase Requests <span class="badge warning">7</span></div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr><th>Request ID</th><th>User ID</th><th>Card Type</th><th>Payment Card</th><th>Amount</th><th>Date</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>CR-10042</td><td>USER_58201</td><td>Visa</td><td>Uploaded</td><td>$49.99</td><td>2024-11-15</td><td><span class="badge warning">Pending</span></td>
+              <td>
+                <button class="btn btn-sm btn-primary" onclick="viewCardRequest(58201)">Review</button>
+                <button class="btn btn-sm btn-success" onclick="approveCardRequest(58201)">Approve</button>
+                <button class="btn btn-sm btn-danger" onclick="rejectCardRequest(58201)">Reject</button>
+              </td>
+            </tr>
+            <tr>
+              <td>CR-10041</td><td>USER_49144</td><td>Mastercard</td><td>Uploaded</td><td>$49.99</td><td>2024-11-15</td><td><span class="badge warning">Pending</span></td>
+              <td>
+                <button class="btn btn-sm btn-primary" onclick="viewCardRequest(49144)">Review</button>
+                <button class="btn btn-sm btn-success" onclick="approveCardRequest(49144)">Approve</button>
+                <button class="btn btn-sm btn-danger" onclick="rejectCardRequest(49144)">Reject</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- User Management -->
+  <section id="user-management" class="content-section hidden">
+    <div class="card">
+      <div class="card-header">All Users</div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr><th>User ID</th><th>Full Name</th><th>Email</th><th>Balance</th><th>Status</th><th>Registered</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>USER_10001</td><td>William Smith</td><td>william@example.com</td><td>$2,450.00</td><td><span class="badge success">Active</span></td>
+              <td>2024-10-01</td><td>
+                <button class="btn btn-sm btn-primary" onclick="viewUserDetail(10001)">View</button>
+                <button class="btn btn-sm btn-warning" onclick="suspendUser(10001)">Suspend</button>
+              </td>
+            </tr>
+            <tr>
+              <td>USER_10002</td><td>Emily Johnson</td><td>emily@example.com</td><td>$1,200.00</td><td><span class="badge success">Active</span></td>
+              <td>2024-10-02</td><td>
+                <button class="btn btn-sm btn-primary" onclick="viewUserDetail(10002)">View</button>
+                <button class="btn btn-sm btn-warning" onclick="suspendUser(10002)">Suspend</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Funding Control -->
+  <section id="funding" class="content-section hidden">
+    <div class="card">
+      <div class="card-header">User Funding Control</div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr><th>User ID</th><th>Full Name</th><th>Current Balance</th><th>Amount</th><th>Type</th><th>Notes</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="7" style="text-align:center; color:var(--text-muted); padding:2rem;">Select a user to fund or adjust balance</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:2rem; max-width:400px;">
+        <div class="form-group">
+          <label>User ID</label>
+          <input type="text" id="fund-user-id" placeholder="e.g. USER_58201">
+        </div>
+        <div class="form-group">
+          <label>Amount (USD)</label>
+          <input type="number" id="fund-amount" placeholder="0.00" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Transaction Type</label>
+          <select id="fund-type">
+            <option value="credit">Credit / Add Funds</option>
+            <option value="debit">Debit / Subtract Funds</option>
+            <option value="set">Set Exact Balance</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea id="fund-notes" placeholder="Reason for transaction..."></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="processFunding()">Process Funding</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Logs -->
+  <section id="logs" class="content-section hidden">
+    <div class="card">
+      <div class="card-header">System & Activity Logs</div>
+      <div id="log-container">
+        <div class="log-item"><span class="log-time">16:42:10</span> <span class="log-success">ADMIN ✅ LOGIN_SUCCESS</span></div>
+        <div class="log-item"><span class="log-time">16:40:05</span> <span class="log-success">SYSTEM ✅ BACKUP_COMPLETED</span></div>
+        <div class="log-item"><span class="log-time">16:35:22</span> <span class="log-warning">USER_49144 ⏳ CARD_REQUEST_SUBMITTED</span></div>
+        <div class="log-item"><span class="log-time">16:30:17</span> <span class="log-success">USER_58201 ✅ REGISTRATION_APPROVED</span></div>
+        <div class="log-item"><span class="log-time">16:25:41</span> <span class="log-error">SYSTEM ❌ FAILED_LOGIN_ATTEMPT from 192.168.1.1</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Compliance -->
+  <section id="compliance" class="content-section hidden">
+    <div class="card">
+      <div class="card-header">Compliance & Security</div>
+      <p style="color:var(--text-muted); text-align:center; padding:3rem;">Compliance module coming soon — will include KYC/AML reports, document audit trails, and system security logs.</p>
+    </div>
+  </section>
+
+  <!-- Settings -->
+  <section id="settings" class="content-section hidden">
+    <div class="card">
+      <div class="card-header">Admin Settings</div>
+      <p style="color:var(--text-muted); text-align:center; padding:3rem;">Settings module coming soon — will include admin profile, password change, notification preferences, and system configuration.</p>
+    </div>
+  </section>
+</div>
+
+<!-- Card Request Detail Modal — with ATM Uploads + PIN -->
+<div id="card-request-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Card Request: USER_58201 — Visa ($49.99)</h3>
+      <button class="close-btn" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="card-request-item">
+        <h4>💳 Prime Wallet Card Request Details</h4>
+        <div class="detail-grid">
+          <div class="detail-group">
+            <div class="detail-label">Card Type</div>
+            <div class="detail-value">Visa</div>
+          </div>
+          <div class="detail-group">
+            <div class="detail-label">Cardholder Name</div>
+            <div class="detail-value">John Michael Morgan</div>
+          </div>
+          <div class="detail-group">
+            <div class="detail-label">Amount</div>
+            <div class="detail-value">$49.99</div>
+          </div>
+          <div class="detail-group">
+            <div class="detail-label">Request Date</div>
+            <div class="detail-value">2024-11-15 14:22:10</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-request-item">
+        <h4>💳 Payment ATM Card — Uploaded by User</h4>
+        <div class="card-preview-grid">
+          <div class="card-preview-box">
+            <h5>Front Side</h5>
+            <img src="card-front-placeholder.jpg" alt="ATM Card Front">
+            <p style="font-size:0.8rem; color:#666;">Uploaded: 2024-11-15 14:21:32</p>
+          </div>
+          <div class="card-preview-box">
+            <h5>Back Side</h5>
+            <img src="card-back-placeholder.jpg" alt="ATM Card Back">
+            <p style="font-size:0.8rem; color:#666;">Uploaded: 2024-11-15 14:21:35</p>
+          </div>
+        </div>
+
+        <div class="detail-group">
+          <div class="detail-label">Transaction PIN (provided by user)</div>
+          <div class="pin-display">••••</div>
+          <p style="color:var(--text-muted); font-size:0.9rem;">User provided this PIN to complete card purchase. Upon approval, this PIN will be activated for all future transactions.</p>
+        </div>
+
+        <div class="form-group">
+          <label>Review Notes</label>
+          <textarea placeholder="Enter review notes — e.g. Card images clear, details match, valid card..."></textarea>
+        </div>
+
+        <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
+          <button class="btn btn-success" onclick="approveCardRequest()">✅ Approve Card & Activate PIN</button>
+          <button class="btn btn-danger" onclick="rejectCardRequest()">❌ Reject Request</button>
+          <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- User Detail Modal -->
+<div id="user-detail-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="detail-title">User Details: USER_58201</h3>
+      <button class="close-btn" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-header">
+        <div class="detail-grid">
+          <div class="detail-group">
+            <div class="detail-label">Full Name</div>
+            <div class="detail-value" id="detail-fullname">John Michael Morgan</div>
+          </div>
+          <div class="detail-group">
+            <div class="detail-label">Email</div>
+            <div class="detail-value" id="detail-email">john@example.com</div>
+          </div>
+          <div class="detail-group">
+            <div class="detail-label">Phone</div>
+            <div class="detail-value" id="detail-phone">+234 XXX XXX XXXX</div>
+          </div>
+          <div class="detail-group">
+            <div class="detail-label">Date of Birth</div>
+            <div class="detail-value" id="detail-dob">1990-01-01</div>
+          </div>
+          <div class="detail-group">
+            <div class="detail-label">Country</div>
+            <div class="detail-value" id="detail-country">Nigeria</div>
+          </div>
+          <div class="detail-group">
+            <div class="detail-label">Status</div>
+            <div class="detail-value" id="detail-status"><span class="badge warning">Pending</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" onclick="openTab('basic')">Basic Info</div>
+        <div class="tab" onclick="openTab('account')">Account History</div>
+        <div class="tab" onclick="openTab('documents')">Verification Documents</div>
+        <div class="tab" onclick="openTab('activity')">Activity Log</div>
+      </div>
+
+      <div class="tab-content active" id="basic">
+        <div class="detail-group">
+          <div class="detail-label">Residential Address</div>
+          <div class="detail-value" id="detail-address">123 Main Street, Lagos, Nigeria</div>
+        </div>
+        <div class="detail-group">
+          <div class="detail-label">Registration Date</div>
+          <div class="detail-value" id="detail-registered">2024-11-15 14:30:00</div>
+        </div>
+        <div class="detail-group">
+          <div class="detail-label">Last Login</div>
+          <div class="detail-value" id="detail-lastlogin">Never</div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="account">
+        <div class="detail-group">
+          <div class="detail-label">Account Balance</div>
+          <div class="detail-value" id="detail-balance">$0.00</div>
+        </div>
+        <div class="detail-group">
+          <div class="detail-label">Account Number</div>
+          <div class="detail-value" id="detail-account">PW-5821-XXXX-XXXX</div>
+        </div>
+        <div class="detail-group">
+          <div class="detail-label">Transaction History</div>
+          <div style="max-height:200px; overflow-y:auto; margin-top:0.5rem;">
+            <p style="color:var(--text-muted); text-align:center; padding:1rem;">No transactions yet</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="documents">
+        <h4 style="margin-bottom:1rem;">Documents Uploaded for Verification</h4>
+        
+        <div class="document-item">
+          <h5>Government-Issued ID — Passport</h5>
+          <p style="color:var(--text-muted); font-size:0.9rem; margin:0.5rem 0;">Filename: passport_johnmorgan.jpg | Uploaded: 2024-11-15 14:22:10</p>
+          <img src="id-front-placeholder.jpg" class="document-preview" alt="ID Front">
+          <p style="text-align:center; color:var(--text-muted); font-size:0.8rem;">Front Side</p>
+          <img src="id-back-placeholder.jpg" class="document-preview" alt="ID Back">
+          <p style="text-align:center; color:var(--text-muted); font-size:0.8rem; margin-bottom:1rem;">Back Side</p>
+          
+          <div class="form-group">
+            <label>Review Notes</label>
+            <textarea placeholder="Add notes about this document..."></textarea>
+          </div>
+          <div style="display:flex; gap:0.75rem; margin-top:1rem;">
+            <button class="btn btn-success" onclick="acceptDocument()">Accept Document</button>
+            <button class="btn btn-danger" onclick="rejectDocument()">Reject Document</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="activity">
+        <div class="log-item"><span class="log-time">14:30:00</span> Account created</div>
+        <div class="log-item"><span class="log-time">14:25:00</span> Email verified</div>
+        <div class="log-item"><span class="log-time">14:22:10</span> ID documents uploaded</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-success" onclick="approveRegistration()">Approve Account</button>
+      <button class="btn btn-danger" onclick="rejectRegistration()">Reject Account</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Sidebar toggle
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.classList.toggle('collapsed');
+  document.getElementById('main-content').classList.toggle('expanded');
+}
+
+// Show section
+function showSection(id) {
+  document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// Open tab
+function openTab(tabId) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+}
+
+// Modal functions
+function openModal(id) {
+  document.getElementById(id).classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+  document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+  document.body.style.overflow = 'auto';
+}
+
+// View card request — opens modal with ATM uploads + PIN
+function viewCardRequest(userId) {
+  openModal('card-request-modal');
+}
+
+// Placeholder functions
+function approveRegistration(userId) { alert('✅ Registration approved for user ' + userId); closeModal(); }
+function rejectRegistration(userId) { alert('❌ Registration rejected for user ' + userId); closeModal(); }
+function approveCardRequest(userId) { alert('✅ Card request approved! Payment verified, card activated, PIN set for user ' + userId); closeModal(); }
+function rejectCardRequest(userId) { alert('❌ Card request rejected for user ' + userId); closeModal(); }
+function viewUserDetail(userId) { openModal('user-detail-modal'); }
+function suspendUser(userId) { alert('User ' + userId + ' suspended'); }
+function processFunding() { alert('Funding processed successfully'); }
+function acceptDocument() { alert('Document accepted'); }
+function rejectDocument() { alert('Document rejected'); }
+
+// Close modal when clicking outside
+document.addEventListener('click', e => {
+  const modals = document.querySelectorAll('.modal.active');
+  modals.forEach(m => { if (e.target === m) closeModal(); });
+});
+</script>
+</body>
+</html>
